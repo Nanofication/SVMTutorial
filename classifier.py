@@ -10,9 +10,10 @@ from sklearn.naive_bayes import MultinomialNB
 text_clf = Pipeline([('vect', CountVectorizer()),
                      ('tfidf', TfidfTransformer()),
                      ('clf', SGDClassifier(loss='hinge', penalty='l2',
-                                           alpha=1e-3, n_iter=5, random_state=42))])
+                                           alpha=1e-3, n_iter=5))])
 
 import numpy as np
+import ReadData
 
 categories = ['alt.atheism', 'soc.religion.christian',
               'comp.graphics', 'sci.med']
@@ -24,15 +25,6 @@ twenty_test = fetch_20newsgroups(subset='test',
                                  categories=categories, shuffle=True, random_state=42)
 # classifier, raw data goes into ___.data and the labels go into ___.target
 
-text_clf.fit(twenty_train.data, twenty_train.target)
-
-docs_test = twenty_test.data
-predicted = text_clf.predict(docs_test)
-
-print metrics.classification_report(twenty_test.target, predicted,
-                                    target_names=twenty_test.target_names)
-
-# print np.mean(predicted == twenty_test.target)
 
 # count_vectorizer = CountVectorizer() # This supports N-grams of words or consecutive characters
 # Once fitted, the vectorizer has built a dictionary of feature indices
@@ -54,3 +46,42 @@ print metrics.classification_report(twenty_test.target, predicted,
 #
 # predicted = clf.predict(x_new_tfidf)
 
+if __name__ == "__main__":
+    # text_clf.fit(twenty_train.data, twenty_train.target)
+    #
+    # docs_test = twenty_test.data
+    # predicted = text_clf.predict(docs_test)
+    #
+    # print metrics.classification_report(twenty_test.target, predicted,
+    #                                     target_names=twenty_test.target_names)
+
+    # print np.mean(predicted == twenty_test.target)
+
+    amazon_data = []
+    amazon_target = []
+
+    ReadData.openFile()
+    ReadData.shuffleTrainingData()
+    data_set = ReadData.TRAINING_DATA
+
+    for data in data_set:
+        amazon_target.append(data["class"])
+        amazon_data.append(data["sentence"])
+
+    train_target = amazon_target[:800]
+    train_data = amazon_data[:800]
+
+    text_clf.fit(train_data, train_target)
+
+    test_target = amazon_target[800:]
+    test_data = amazon_data[800:]
+
+    predicted = text_clf.predict(test_data)
+
+    count = 10
+    total = 0
+
+    for i in range(count):
+        total += np.mean(predicted == test_target)
+
+    print total/count
